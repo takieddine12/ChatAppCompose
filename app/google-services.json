@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "225927393227",
+    "project_id": "composechatapp-4f2c0",
+    "storage_bucket": "composechatapp-4f2c0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225927393227:android:72560b901d36b27136904e",
+        "android_client_info": {
+          "package_name": "com.fly.me.realtimechatappcompose"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "225927393227-mufohd5hpls8kl656ng19oh93bvopf6i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtsFUPt9pIfXNy8rZ5998INaDWvsKIOyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "225927393227-mufohd5hpls8kl656ng19oh93bvopf6i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
