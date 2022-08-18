@@ -6,6 +6,7 @@ import android.text.style.TabStopSpan
 import android.view.inputmethod.InputMethodManager
 import android.widget.TableLayout
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -32,6 +33,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.fly.me.realtimechatappcompose.R
@@ -56,6 +59,8 @@ fun MainScreen() {
     val firebaseAuth = FirebaseAuth.getInstance()
     val userName = remember { mutableStateOf("") }
     val userImage = remember { mutableStateOf("") }
+    val isHandlerCalled = remember { mutableStateOf(false) }
+    val context = LocalContext.current
     // GET USER Info
     firebaseDatabase
         .reference
@@ -74,7 +79,6 @@ fun MainScreen() {
             }
 
         })
-
 
     Scaffold {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -115,6 +119,31 @@ fun MainScreen() {
         }
 
     }
+    BackHandler {
+        // show exit dialog
+        isHandlerCalled.value = true
+    }
+    if(isHandlerCalled.value){
+        AlertDialog(
+            onDismissRequest = {
+                isHandlerCalled.value = false
+            },
+            confirmButton = {  TextButton(onClick = {
+                isHandlerCalled.value = false
+                (context as Activity).finish()
+            }) {
+                Text("Exit")
+            }},
+            dismissButton = { TextButton(onClick = {
+                isHandlerCalled.value = false
+            }) {
+                Text("Cancel")
+            }},
+            title = { Text("Exit App!")},
+            text = { Text("Do you want to exit app !")}
+        )
+    }
+
 }
 
 @OptIn(ExperimentalPagerApi::class)

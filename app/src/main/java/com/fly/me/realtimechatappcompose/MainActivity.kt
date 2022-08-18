@@ -14,10 +14,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.fly.me.realtimechatappcompose.routing.ChatRouting
-import com.fly.me.realtimechatappcompose.screens.LoginScreen
-import com.fly.me.realtimechatappcompose.screens.MainScreen
-import com.fly.me.realtimechatappcompose.screens.RegistrationScreen
-import com.fly.me.realtimechatappcompose.screens.SplashScreen
+import com.fly.me.realtimechatappcompose.screens.*
 import com.fly.me.realtimechatappcompose.ui.theme.RealTimeChatAppComposeTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,7 +46,7 @@ fun NavHost(navHostController: NavHostController){
         composable(route = ChatRouting.Home.route){
             MainScreen()
         }
-
+        
     }
 
 }
