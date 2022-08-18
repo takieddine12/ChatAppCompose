@@ -39,6 +39,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.fly.me.realtimechatappcompose.R
 import com.fly.me.realtimechatappcompose.models.ChatModel
+import com.fly.me.realtimechatappcompose.routing.ChatRouting
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
@@ -53,32 +54,36 @@ import java.util.*
 
 
 @Composable
-fun MainScreen() {
+fun MainScreen(navHostController: NavHostController) {
 
     val firebaseDatabase = FirebaseDatabase.getInstance()
     val firebaseAuth = FirebaseAuth.getInstance()
     val userName = remember { mutableStateOf("") }
     val userImage = remember { mutableStateOf("") }
     val isHandlerCalled = remember { mutableStateOf(false) }
+    val isUserExiting = remember { mutableStateOf(false) }
     val context = LocalContext.current
     // GET USER Info
-    firebaseDatabase
-        .reference
-        .child("Chatters")
-        .child(firebaseAuth.currentUser!!.uid)
-        .addListenerForSingleValueEvent(object : ValueEventListener{
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if(snapshot.exists()){
-                     userName.value = snapshot.child("fullName").value.toString()
-                     userImage.value = snapshot.child("image").value.toString()
+    if(firebaseAuth.currentUser != null){
+        firebaseDatabase
+            .reference
+            .child("Chatters")
+            .child(firebaseAuth.currentUser!!.uid)
+            .addListenerForSingleValueEvent(object : ValueEventListener{
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if(snapshot.exists()){
+                        userName.value = snapshot.child("fullName").value.toString()
+                        userImage.value = snapshot.child("image").value.toString()
+                    }
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
+                override fun onCancelled(error: DatabaseError) {
 
-            }
+                }
 
-        })
+            })
+    }
+
 
     Scaffold {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -90,34 +95,46 @@ fun MainScreen() {
             )
         }
         Column {
-            Text(
-                text = "Welcome",
-                color = Color.White,
-                fontSize = 25.sp,
-                modifier = Modifier.padding(
-                    top = 40.dp,
-                    start = 20.dp
-                ),
-                fontFamily = FontFamily(Font(R.font.roboto_bold))
-            )
-            Card(
-                Modifier
-                    .padding(top = 20.dp, start = 20.dp)
-                    .clip(shape = RoundedCornerShape(8.dp)),
-                backgroundColor = Color.Green
-            ) {
-                Text(
-                    userName.value,
-                    color = Color.Black,
-                    fontSize = 17.sp,
-                    modifier = Modifier.padding(5.dp),
-                    fontFamily = FontFamily(Font(R.font.roboto_medium))
-                )
-            }
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp, start = 20.dp),) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Welcome",
+                        color = Color.White,
+                        fontSize = 25.sp,
+                        fontFamily = FontFamily(Font(R.font.roboto_bold))
+                    )
+                    Card(
+                        Modifier
+                            .padding(top = 20.dp)
+                            .clip(shape = RoundedCornerShape(8.dp)),
+                        backgroundColor = Color.Green
+                    ) {
+                        Text(
+                            userName.value,
+                            color = Color.Black,
+                            fontSize = 17.sp,
+                            modifier = Modifier.padding(5.dp),
+                            fontFamily = FontFamily(Font(R.font.roboto_medium))
+                        )
+                    }
 
+
+                }
+                IconButton(
+                    modifier = Modifier.padding(30.dp),
+                    onClick = {
+                        isUserExiting.value = true
+                    }) {
+                    Icon(painterResource(id = R.drawable.ic_baseline_exit_to_app_24),
+                        modifier = Modifier.size(40.dp),
+                        contentDescription = "",
+                        tint = Color.White)
+                }
+            }
             TabLayout()
         }
-
     }
     BackHandler {
         // show exit dialog
@@ -143,6 +160,30 @@ fun MainScreen() {
             text = { Text("Do you want to exit app !")}
         )
     }
+    if(isUserExiting.value){
+        AlertDialog(
+            onDismissRequest = {
+                isUserExiting.value  = false
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    firebaseAuth.signOut()
+                    navHostController.navigate(ChatRouting.Login.route)
+                }) {
+                    Text("Exit")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    isUserExiting.value = false
+                }) {
+                    Text("Cancel")
+                }
+            },
+            title = { Text("Exiting App!") },
+            text = { Text("Do you really want to exit !") }
+        )
+    }
 
 }
 
@@ -165,7 +206,9 @@ fun TabS(pagerState: PagerState){
         "Profile")
 
     TabRow(
-        modifier  = Modifier.padding(top = 10.dp),
+        modifier  = Modifier
+            .padding(top = 10.dp)
+            .fillMaxWidth(),
         selectedTabIndex = pagerState.currentPage,
         backgroundColor = Color.Transparent,
         contentColor = Color.White) {

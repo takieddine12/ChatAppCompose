@@ -44,9 +44,9 @@ fun NavHost(navHostController: NavHostController){
             RegistrationScreen(navHostController = navHostController)
         }
         composable(route = ChatRouting.Home.route){
-            MainScreen()
+            MainScreen(navHostController = navHostController)
         }
-        
+
     }
 
 }

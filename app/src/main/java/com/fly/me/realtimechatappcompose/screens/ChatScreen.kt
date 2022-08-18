@@ -2,9 +2,15 @@ package com.fly.me.realtimechatappcompose.screens
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -18,26 +24,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.fly.me.realtimechatappcompose.R
 import com.fly.me.realtimechatappcompose.models.ChatModel
-import com.fly.me.realtimechatappcompose.routing.ChatRouting
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -51,6 +55,13 @@ fun ChatScreen() {
     val scrollState = rememberLazyListState()
     val context = LocalContext.current
     val messageField = remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val bitmap = remember { mutableStateOf<Bitmap?>(null) }
+    var isUploadDialogShowing = remember { mutableStateOf(false) }
+    
+    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()){ result ->
+        imageUri = result
+    }
 
     // GET USER Info
     firebaseDatabase
@@ -104,6 +115,17 @@ fun ChatScreen() {
         }
     }
 
+    imageUri?.let {
+        if(Build.VERSION.SDK_INT < 28){
+            bitmap.value = MediaStore.Images.Media.getBitmap(context.contentResolver,it)
+            isUploadDialogShowing.value = true
+        } else {
+            val imageSource = ImageDecoder.createSource(context.contentResolver,it)
+            bitmap.value = ImageDecoder.decodeBitmap(imageSource)
+            isUploadDialogShowing.value = true
+        }
+    }
+
     Column {
         LazyColumn(state  = scrollState , modifier = Modifier
             .weight(1f)
@@ -132,7 +154,11 @@ fun ChatScreen() {
         Row(modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 40.dp)) {
-            IconButton(onClick = { }) {
+            IconButton(onClick = {
+                // pick Image
+                launcher.launch("image/*")
+
+            }) {
                 Icon(painterResource(id = R.drawable.ic_baseline_image_24), contentDescription = "", tint = Color.White)
             }
             TextField(
@@ -183,5 +209,42 @@ fun ChatScreen() {
 
             }
     }
+    if(isUploadDialogShowing.value){
+        ShowCustomDialog(bitmap.value!!,isUploadDialogShowing)
+    }
 
 }
+
+@Composable
+fun ShowCustomDialog(value: Bitmap, uploadDialogShowing: MutableState<Boolean>) {
+    Dialog(onDismissRequest = {
+        uploadDialogShowing.value = false
+    }){
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White
+        ) {
+            Column() {
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 250.dp),
+                    bitmap = value.asImageBitmap(),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = "")
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        modifier = Modifier.width(150.dp),
+                        onClick = {
+                            uploadDialogShowing.value = false
+                        }) {
+                        Text("Upload")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
